@@ -77,7 +77,13 @@ macro v(expr)
 end
 
 function get_address(man::Manual{Manual{T}}, ::Type{Val{field}}) where {T, field}
-    get_address(Manual{T}(man.ptr), Val{field})
+    if field == :ptr
+        i = findfirst(fieldnames(Manual{T}), field)
+        @assert i != 0 "Manual{$T} has no field $field"
+        Manual{fieldtype(Manual{T}, i)}(man.ptr + fieldoffset(Manual{T}, i))
+    else
+        get_address(Manual{T}(man.ptr), Val{field})
+    end
 end
 
 @generated function get_address(man::Manual{T}, ::Type{Val{field}}) where {T, field}
