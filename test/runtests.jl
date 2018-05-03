@@ -88,6 +88,14 @@ p = @v mp
 @test String(p) == s
 @test string(p) isa String
 
+# test string slices
+
+s = "aye bee sea"
+mp = MM.malloc(ManualString, s)
+p = @v mp
+@test p[5:7] isa ManualString
+@test p[5:7] == "bee"
+
 # sketch of paged pmas
 
 struct PackedMemoryArray{K,V}

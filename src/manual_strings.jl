@@ -14,10 +14,18 @@ function Base.String(ps::ManualString)
     unsafe_string(convert(Ptr{UInt8}, ps.ptr.ptr), ps.len)
 end
 
+function unsafe_manual_string(ptr::Ptr{UInt8}, len::Int64)
+    ManualString(Manual{UInt8}(convert(Ptr{Void}, ptr)), len)
+end
+
 # fields
 
 function Base.pointer(ps::ManualString)
     convert(Ptr{UInt8}, ps.ptr.ptr)
+end
+
+function Base.pointer(ps::ManualString, i::Integer)
+    pointer(ps) + i - 1
 end
 
 # string interface - this is largely copied from Base and will almost certainly break when we move to 0.7
@@ -134,7 +142,7 @@ function Base.getindex(s::ManualString, r::UnitRange{Int})
         throw(BoundsError())
     end
     j = nextind(s,j)-1
-    unsafe_string(pointer(s,i), j-i+1)
+    unsafe_manual_string(pointer(s,i), j-i+1)
 end
 
 function Base.search(s::ManualString, c::Char, i::Integer = 1)
