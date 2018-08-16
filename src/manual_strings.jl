@@ -1,3 +1,5 @@
+using Compat
+
 struct ManualString <: AbstractString
     ptr::Manual{UInt8}
     len::Int64 # in bytes
@@ -5,9 +7,14 @@ end
 
 # creation
 
-function Base.unsafe_copy!(ps::ManualString, string::Union{ManualString, String})
+function Base.unsafe_copyto!(ps::ManualString, string::ManualString)
     @assert ps.len >= string.len
-    unsafe_copy!(convert(Ptr{UInt8}, ps.ptr.ptr), pointer(string), string.len)
+    unsafe_copyto!(convert(Ptr{UInt8}, ps.ptr.ptr), pointer(string), string.len)
+end
+
+function Base.unsafe_copyto!(ps::ManualString, string::String)
+    @assert ps.len >= sizeof(string)
+    unsafe_copyto!(convert(Ptr{UInt8}, ps.ptr.ptr), pointer(string), sizeof(string))
 end
 
 function Base.String(ps::ManualString)
@@ -15,7 +22,7 @@ function Base.String(ps::ManualString)
 end
 
 function unsafe_manual_string(ptr::Ptr{UInt8}, len::Int64)
-    ManualString(Manual{UInt8}(convert(Ptr{Void}, ptr)), len)
+    ManualString(Manual{UInt8}(convert(Ptr{Cvoid}, ptr)), len)
 end
 
 # fields
@@ -55,7 +62,7 @@ function Base.prevind(s::ManualString, i::Integer)
     j = Int(i)
     e = s.len
     if j > e
-        return endof(s)
+        return lastindex(s)
     end
     j -= 1
     @inbounds while j > 0 && Base.is_valid_continuation(codeunit(s,j))
@@ -83,7 +90,7 @@ Base.byte_string_classify(s::ManualString) =
 Base.isvalid(::Type{ManualString}, s::ManualString) = byte_string_classify(s) != 0
 Base.isvalid(s::ManualString) = isvalid(ManualString, s)
 
-function Base.endof(s::ManualString)
+function Base.lastindex(s::ManualString)
     p = pointer(s)
     i = s.len
     while i > 0 && Base.is_valid_continuation(unsafe_load(p,i))
@@ -101,6 +108,7 @@ function Base.length(s::ManualString)
     cnum
 end
 
+#=
 Base.done(s::ManualString, state) = state > s.len
 
 @inline function Base.next(s::ManualString, i::Int)
@@ -114,6 +122,7 @@ Base.done(s::ManualString, state) = state > s.len
     end
     return Base.slow_utf8_next(p, b, i, s.len)
 end
+=#
 
 function Base.reverseind(s::ManualString, i::Integer)
     j = s.len + 1 - i
@@ -145,58 +154,6 @@ function Base.getindex(s::ManualString, r::UnitRange{Int})
     unsafe_manual_string(pointer(s,i), j-i+1)
 end
 
-function Base.search(s::ManualString, c::Char, i::Integer = 1)
-    if i < 1 || i > sizeof(s)
-        i == sizeof(s) + 1 && return 0
-        throw(BoundsError(s, i))
-    end
-    if Base.is_valid_continuation(Base.codeunit(s,i))
-        throw(UnicodeError(UTF_ERR_INVALID_INDEX, i, Base.codeunit(s,i)))
-    end
-    c < Char(0x80) && return search(s, c%UInt8, i)
-    while true
-        i = search(s, Base.first_utf8_byte(c), i)
-        (i==0 || s[i] == c) && return i
-        i = next(s,i)[2]
-    end
-end
-
-function Base.search(a::ManualString, b::Union{Int8,UInt8}, i::Integer = 1)
-    if i < 1
-        throw(BoundsError(a, i))
-    end
-    n = sizeof(a)
-    if i > n
-        return i == n+1 ? 0 : throw(BoundsError(a, i))
-    end
-    p = pointer(a)
-    q = ccall(:memchr, Ptr{UInt8}, (Ptr{UInt8}, Int32, Csize_t), p+i-1, b, n-i+1)
-    q == C_NULL ? 0 : Int(q-p+1)
-end
-
-function Base.rsearch(s::ManualString, c::Char, i::Integer = s.len)
-    c < Char(0x80) && return rsearch(s, c%UInt8, i)
-    b = Base.first_utf8_byte(c)
-    while true
-        i = rsearch(s, b, i)
-        (i==0 || s[i] == c) && return i
-        i = prevind(s,i)
-    end
-end
-
-function Base.rsearch(a::ManualString, b::Union{Int8,UInt8}, i::Integer = s.len)
-    if i < 1
-        return i == 0 ? 0 : throw(BoundsError(a, i))
-    end
-    n = sizeof(a)
-    if i > n
-        return i == n+1 ? 0 : throw(BoundsError(a, i))
-    end
-    p = pointer(a)
-    q = ccall(:memrchr, Ptr{UInt8}, (Ptr{UInt8}, Int32, Csize_t), p, b, i)
-    q == C_NULL ? 0 : Int(q-p+1)
-end
-
 function Base.string(a::ManualString...)
     if length(a) == 1
         return String(a[1]::ManualString)
@@ -208,7 +165,7 @@ function Base.string(a::ManualString...)
     out = Base._string_n(n)
     offs = 1
     for str in a
-        unsafe_copy!(pointer(out,offs), pointer(str), str.len)
+        unsafe_copyto!(pointer(out,offs), pointer(str), str.len)
         offs += str.len
     end
     return out

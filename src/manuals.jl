@@ -1,12 +1,14 @@
+using Compat
+
 """
 A pointer to a `T` in some manually managed region of memory.
 """
 # TODO do we want to also keep the page address/size in here? If we complicate the loading code a little we could avoid writing it to the page, so it would only exist on the stack.
 struct Manual{T}
-    ptr::Ptr{Void}
+    ptr::Ptr{Cvoid}
 
-    function Manual{T}(ptr::Ptr{Void}) where {T}
-        @assert isbits(T)
+    function Manual{T}(ptr::Ptr{Cvoid}) where {T}
+        @assert isbitstype(T)
         new(ptr)
     end
 end
@@ -77,7 +79,7 @@ macro v(expr)
 end
 
 @generated function get_address(man::Manual{T}, ::Type{Val{field}}) where {T, field}
-    i = findfirst(fieldnames(T), field)
+    i = findfirst(isequal(field), fieldnames(T))
     @assert i != 0 "$T has no field $field"
     quote
         $(Expr(:meta, :inline))
@@ -95,10 +97,12 @@ end
     else
         # is a composite type - recursively load its fields
         # so that specializations of this method can hook in and alter loading
-        $(Expr(:meta, :inline))
-        Expr(:new, T, @splice (i, field) in enumerate(fieldnames(T)) quote
-            unsafe_load(get_address(man, $(Val{field})))
-        end)
+        quote
+            $(Expr(:meta, :inline))
+            $(Expr(:new, T, @splice (i, field) in enumerate(fieldnames(T)) quote
+                unsafe_load(get_address(man, $(Val{field})))
+            end))
+        end
     end
 end
 

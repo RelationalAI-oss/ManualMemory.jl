@@ -4,7 +4,7 @@ struct ManualVector{T} <: AbstractArray{T, 1}
     length::Int64
 
     function ManualVector{T}(ptr::Manual{T}, length::Int64) where {T}
-        @assert isbits(T)
+        @assert isbitstype(T)
         new(ptr, length)
     end
 end

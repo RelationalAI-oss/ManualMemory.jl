@@ -2,7 +2,7 @@ module TestManualMemory
 
 using ManualMemory
 import ManualMemory; const MM = ManualMemory
-using Base.Test
+using Test
 
 # basic sanity checks
 
@@ -22,8 +22,8 @@ foo = Manual{Foo}(Libc.malloc(sizeof(Foo))) # display should work in 0.7 TODO fi
 @test (@a foo.y).ptr == foo.ptr + sizeof(Int64)
 
 # tests ambiguous syntax
-@test_throws ErrorException eval(:(@v foo.y == 2.5))
-@test_throws ErrorException eval(:(@a foo.y == 2.5))
+@test_throws LoadError eval(:(@v foo.y == 2.5))
+@test_throws LoadError eval(:(@a foo.y == 2.5))
 
 mpv = MM.malloc(ManualVector{Foo}, 3)
 pv = @v mpv

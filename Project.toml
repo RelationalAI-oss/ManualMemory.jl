@@ -1,0 +1,9 @@
+name = "ManualMemory"
+uuid = "ecc6e6bb-8761-5be2-88e5-871460c41cc3"
+authors = []
+version = "0.1.2"
+
+[deps]
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
