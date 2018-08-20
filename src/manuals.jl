@@ -114,6 +114,14 @@ end
             unsafe_store!(convert(Ptr{T}, man.ptr), value)
             value
         end
+    elseif T <: Tuple
+        quote
+            $(Expr(:meta, :inline))
+            $(@splice (i, field) in enumerate(fieldnames(T)) quote
+                unsafe_store!(get_address(man, $(Val{field})), value[$field])
+            end)
+            value
+        end
     else
         # is a composite type - recursively store its fields
         # so that specializations of this method can hook in and alter storing
