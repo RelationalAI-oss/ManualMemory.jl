@@ -9,21 +9,21 @@ struct ManualBit
     mask::UInt64
 end
 
-function get_address(pv::ManualBitVector, i::Int)
+@inline function get_address(pv::ManualBitVector, i::Int)
     (i < 1 || i > pv.length) && throw(BoundsError(pv, i))
     i1, i2 = Base.get_chunks_id(i)
     ManualBit(Manual{UInt64}(pv.ptr.ptr + (i1-1)*sizeof(UInt64)), UInt64(1) << i2)
 end
 
-function get_address(pv::Manual{ManualBitVector}, i::Int)
+@inline function get_address(pv::Manual{ManualBitVector}, i::Int)
     get_address(unsafe_load(pv), i)
 end
 
-function Base.unsafe_load(pb::ManualBit)
+@inline function Base.unsafe_load(pb::ManualBit)
     (unsafe_load(pb.ptr) & pb.mask) != 0
 end
 
-function Base.unsafe_store!(pb::ManualBit, v::Bool)
+@inline function Base.unsafe_store!(pb::ManualBit, v::Bool)
     c = unsafe_load(pb.ptr)
     c = ifelse(v, c | pb.mask, c & ~pb.mask)
     unsafe_store!(pb.ptr, c)
@@ -33,7 +33,7 @@ function unsafe_resize!(pb::ManualBitVector, length::Int64)
     @v pb.length = length
 end
 
-function Base.findprevnot(pb::ManualBitVector, start::Int)
+@inline function Base.findprevnot(pb::ManualBitVector, start::Int)
     start > 0 || return 0
     start > length(pb) && throw(BoundsError(pb, start))
 
@@ -65,7 +65,7 @@ function Base.findprevnot(pb::ManualBitVector, start::Int)
     # return 0
 end
 
-function Base.findnextnot(pb::ManualBitVector, start::Int)
+@inline function Base.findnextnot(pb::ManualBitVector, start::Int)
     start > 0 || throw(BoundsError(pb, start))
     start > length(pb) && return 0
 
