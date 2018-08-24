@@ -79,17 +79,29 @@ function Base.findnextnot(pb::ManualBitVector, start::Int)
     start
 end
 
+@inline function Base.findnext(pb::ManualBitVector, start::Int)
+    # TODO placeholder slow implementation; should adapt optimized
+    # BitVector code
+
+    len = length(pb)
+    @inbounds while start <= len && !pb[start]
+        start += 1
+    end
+
+    start
+end
+
 # array interface
 
 function Base.size(pv::ManualBitVector)
     (pv.length,)
 end
 
-function Base.getindex(pv::ManualBitVector, i::Int)
+@inline function Base.getindex(pv::ManualBitVector, i::Int)
     unsafe_load(get_address(pv, i))
 end
 
-function Base.setindex!(pv::ManualBitVector, v::Bool, i::Int)
+@inline function Base.setindex!(pv::ManualBitVector, v::Bool, i::Int)
     unsafe_store!(get_address(pv, i), v)
 end
 
