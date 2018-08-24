@@ -72,7 +72,7 @@ function Base.findnextnot(pb::ManualBitVector, start::Int)
     # TODO placeholder slow implementation; should adapt optimized
     # BitVector code
 
-    @inbounds while start < length(pb) && pb[start]
+    @inbounds while start <= length(pb) && pb[start]
         start += 1
     end
 
