@@ -67,7 +67,7 @@ end
 
 @inline function Base.findnextnot(pb::ManualBitVector, start::Int)
     start > 0 || throw(BoundsError(pb, start))
-    start > length(pb) && return 0
+    start > length(pb) && return nothing
 
     # TODO placeholder slow implementation; should adapt optimized
     # BitVector code
@@ -88,7 +88,7 @@ end
         start += 1
     end
 
-    start
+    start == 0 ? nothing : start
 end
 
 # array interface
