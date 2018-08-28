@@ -1,9 +1,9 @@
 using Compat
 
+# TODO do we want to also keep the page address/size in here? If we complicate the loading code a little we could avoid writing it to the page, so it would only exist on the stack.
 """
 A pointer to a `T` in some manually managed region of memory.
 """
-# TODO do we want to also keep the page address/size in here? If we complicate the loading code a little we could avoid writing it to the page, so it would only exist on the stack.
 struct Manual{T}
     ptr::Ptr{Cvoid}
 
