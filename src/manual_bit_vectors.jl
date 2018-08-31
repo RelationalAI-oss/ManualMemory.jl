@@ -44,7 +44,7 @@ end
         start -= 1
     end
 
-    start
+    (start == 0) ? nothing : start
 
     # Bc = B.chunks
     #
@@ -66,17 +66,16 @@ end
 end
 
 @inline function Base.findnextnot(pb::ManualBitVector, start::Int)
-    start > 0 || throw(BoundsError(pb, start))
-    start > length(pb) && return nothing
-
+    len = length(pb)
+    
     # TODO placeholder slow implementation; should adapt optimized
     # BitVector code
 
-    @inbounds while start <= length(pb) && pb[start]
+    @inbounds while start <= len && pb[start]
         start += 1
     end
 
-    start
+    (start > len) ? nothing : start
 end
 
 @inline function Base.findnext(pb::ManualBitVector, start::Int)
@@ -88,7 +87,7 @@ end
         start += 1
     end
 
-    start == 0 ? nothing : start
+    (start > len) ? nothing : start
 end
 
 # array interface
