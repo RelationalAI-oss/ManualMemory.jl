@@ -33,7 +33,7 @@ function unsafe_resize!(pb::ManualBitVector, length::Int64)
     @v pb.length = length
 end
 
-@inline function Base.findprevnot(pb::ManualBitVector, start::Int)
+@inline function findprevnot(pb::ManualBitVector, start::Int)
     start > 0 || return 0
     start > length(pb) && throw(BoundsError(pb, start))
 
@@ -65,7 +65,7 @@ end
     # return 0
 end
 
-@inline function Base.findnextnot(pb::ManualBitVector, start::Int)
+@inline function findnextnot(pb::ManualBitVector, start::Int)
     len = length(pb)
     
     # TODO placeholder slow implementation; should adapt optimized
@@ -107,3 +107,5 @@ end
 function Base.IndexStyle(_::Type{ManualBitVector})
     Base.IndexLinear()
 end
+
+export findnextnot, findprevnot
